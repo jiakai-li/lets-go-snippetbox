@@ -2,14 +2,29 @@ package main
 
 import (
 	"flag"
-	"log"
+	"log/slog"
 	"net/http"
+	"os"
 	"path/filepath"
 )
 
 func main() {
+	// Parse command line argument
 	addr := flag.String("addr", ":4000", "HTTP network address")
 	flag.Parse()
+
+	// Configure logger
+	// Custom loggers created by slog.New() are concurrency-safe
+	// You can share a single logger and use it across multiple goroutines
+	// and in your HTTP handlers without needing to worry about race conditions
+
+	// But if there are multiple structured loggers writing to the same destination
+	// then you need to be careful and ensure that the destination's underlying `write()`
+	// method is also safe for concurrent use
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+		AddSource: true,
+		Level:     slog.LevelDebug,
+	}))
 
 	mux := http.NewServeMux()
 
@@ -25,10 +40,11 @@ func main() {
 	mux.HandleFunc("GET /snippet/create", snippetCreate)
 	mux.HandleFunc("POST /snippet/create", snippetCreatePost)
 
-	log.Printf("starting server on %s", *addr)
+	logger.Info("starting server", slog.String("addr", *addr))
 
 	err := http.ListenAndServe(*addr, mux)
-	log.Fatal(err)
+	logger.Error(err.Error())
+	os.Exit(1)
 }
 
 // Custom FileSystem for disabling directory listings
