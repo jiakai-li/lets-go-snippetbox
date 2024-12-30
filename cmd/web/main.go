@@ -8,6 +8,11 @@ import (
 	"path/filepath"
 )
 
+// Hold the application-wide dependencies
+type application struct {
+	logger *slog.Logger
+}
+
 func main() {
 	// Parse command line argument
 	addr := flag.String("addr", ":4000", "HTTP network address")
@@ -21,10 +26,14 @@ func main() {
 	// But if there are multiple structured loggers writing to the same destination
 	// then you need to be careful and ensure that the destination's underlying `write()`
 	// method is also safe for concurrent use
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
-		AddSource: true,
-		Level:     slog.LevelDebug,
+	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+		Level: slog.LevelDebug,
 	}))
+
+	// Initialize a new instance of application struct
+	app := &application{
+		logger: logger,
+	}
 
 	mux := http.NewServeMux()
 
@@ -35,10 +44,10 @@ func main() {
 	mux.Handle("GET /static/", http.StripPrefix("/static", fileServer))
 
 	// Register other handlers
-	mux.HandleFunc("GET /{$}", home)
-	mux.HandleFunc("GET /snippet/view/{id}", snippetView)
-	mux.HandleFunc("GET /snippet/create", snippetCreate)
-	mux.HandleFunc("POST /snippet/create", snippetCreatePost)
+	mux.HandleFunc("GET /{$}", app.home)
+	mux.HandleFunc("GET /snippet/view/{id}", app.snippetView)
+	mux.HandleFunc("GET /snippet/create", app.snippetCreate)
+	mux.HandleFunc("POST /snippet/create", app.snippetCreatePost)
 
 	logger.Info("starting server", slog.String("addr", *addr))
 
