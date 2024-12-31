@@ -5,7 +5,6 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
-	"path/filepath"
 )
 
 // Hold the application-wide dependencies
@@ -35,54 +34,9 @@ func main() {
 		logger: logger,
 	}
 
-	mux := http.NewServeMux()
-
-	// Create a file server which serves files out of the "./ui/static" directory
-	fileServer := http.FileServer(neuteredFileSystem{http.Dir("./ui/static")})
-
-	// Use mux.Handle() function to register the file server as the handler
-	mux.Handle("GET /static/", http.StripPrefix("/static", fileServer))
-
-	// Register other handlers
-	mux.HandleFunc("GET /{$}", app.home)
-	mux.HandleFunc("GET /snippet/view/{id}", app.snippetView)
-	mux.HandleFunc("GET /snippet/create", app.snippetCreate)
-	mux.HandleFunc("POST /snippet/create", app.snippetCreatePost)
-
 	logger.Info("starting server", slog.String("addr", *addr))
 
-	err := http.ListenAndServe(*addr, mux)
+	err := http.ListenAndServe(*addr, app.routes())
 	logger.Error(err.Error())
 	os.Exit(1)
-}
-
-// Custom FileSystem for disabling directory listings
-type neuteredFileSystem struct {
-	fs http.FileSystem
-}
-
-func (nfs neuteredFileSystem) Open(path string) (http.File, error) {
-	f, err := nfs.fs.Open(path)
-	if err != nil {
-		return nil, err
-	}
-
-	s, err := f.Stat()
-	if err != nil {
-		return nil, err
-	}
-
-	if s.IsDir() {
-		indexFile := filepath.Join(path, "index.html")
-		if _, err := nfs.fs.Open(indexFile); err != nil {
-			closeErr := f.Close()
-			if closeErr != nil {
-				return nil, closeErr
-			}
-
-			return nil, err
-		}
-	}
-
-	return f, nil
 }
