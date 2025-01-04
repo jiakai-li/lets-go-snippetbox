@@ -7,13 +7,16 @@ import (
 	"net/http"
 	"os"
 
+	"jiakai-li/lets-go-snippetbox/internal/models"
+
 	// we need the driver’s init() function to run
 	_ "github.com/go-sql-driver/mysql"
 )
 
 // Hold the application-wide dependencies
 type application struct {
-	logger *slog.Logger
+	logger   *slog.Logger
+	snippets *models.SnippetModel
 }
 
 func main() {
@@ -44,7 +47,8 @@ func main() {
 
 	// Initialize a new instance of application struct
 	app := &application{
-		logger: logger,
+		logger:   logger,
+		snippets: &models.SnippetModel{DB: db},
 	}
 
 	logger.Info("starting server", slog.String("addr", *addr))
