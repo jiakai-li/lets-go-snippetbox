@@ -59,6 +59,8 @@ func main() {
 }
 
 func openDB(dsn string) (*sql.DB, error) {
+	// The returned DB is safe for concurrent use by multiple goroutines
+	// and maintains its own pool of idle connections.
 	db, err := sql.Open("mysql", dsn)
 	if err != nil {
 		return nil, err
