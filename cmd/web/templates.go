@@ -2,13 +2,15 @@ package main
 
 import (
 	"html/template"
-	"jiakai-li/lets-go-snippetbox/internal/models"
 	"path/filepath"
+
+	"jiakai-li/lets-go-snippetbox/internal/models"
 )
 
 type templateData struct {
-	Snippet  models.Snippet
-	Snippets []models.Snippet
+	CurrentYear int
+	Snippet     models.Snippet
+	Snippets    []models.Snippet
 }
 
 func newTemplateCache() (map[string]*template.Template, error) {
