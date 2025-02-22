@@ -10,12 +10,10 @@ import (
 )
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
-	// The header name, i.e. "Server" will be canonicalized using `textproto.CanonicalMIMEHeaderKey()`
-	w.Header().Add("Server", "Go")
-
 	snippets, err := app.snippets.Latest()
 	if err != nil {
 		app.serverError(w, r, err)
+		return
 	}
 
 	data := app.newTemplateData(r)
