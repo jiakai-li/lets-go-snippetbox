@@ -17,6 +17,6 @@ func (app *application) routes() http.Handler {
 	mux.HandleFunc("GET /snippet/create", app.snippetCreate)
 	mux.HandleFunc("POST /snippet/create", app.snippetCreatePost)
 
-	// commonHeaders -> servemux -> application handler
-	return commonHeaders(mux)
+	// logRequest -> commonHeaders -> servemux -> application handler
+	return app.logRequest(commonHeaders(mux))
 }
