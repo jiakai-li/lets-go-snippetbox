@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 )
 
@@ -52,6 +53,22 @@ func (app *application) logRequest(next http.Handler) http.Handler {
 			uri    = r.URL.RequestURI()
 		)
 		app.logger.Info("received request", "ip", ip, "proto", proto, "method", method, "uri", uri)
+		next.ServeHTTP(w, r)
+	})
+}
+
+// Will only recover panics that happen in the same goroutine that executed the recoverPanic middleware
+func (app *application) recoverPanic(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Creates a deferred function that will always be run in the event of a panic
+		defer func() {
+			if err := recover(); err != nil {
+				w.Header().Set("Connection", "close")
+				// Return a 500 Internal Server Error response
+				app.serverError(w, r, fmt.Errorf("%s", err))
+			}
+		}()
+
 		next.ServeHTTP(w, r)
 	})
 }
