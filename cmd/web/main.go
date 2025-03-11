@@ -78,8 +78,9 @@ func main() {
 
 	// Initialize a new http.Server struct
 	srv := &http.Server{
-		Addr:    *addr,
-		Handler: app.routes(),
+		Addr:     *addr,
+		Handler:  app.routes(),
+		ErrorLog: slog.NewLogLogger(logger.Handler(), slog.LevelWarn),
 	}
 
 	logger.Info("starting server", slog.String("addr", *addr))
