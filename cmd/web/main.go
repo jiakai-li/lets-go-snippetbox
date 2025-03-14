@@ -66,6 +66,7 @@ func main() {
 	sessionManager := scs.New()
 	sessionManager.Store = mysqlstore.New(db)
 	sessionManager.Lifetime = 12 * time.Hour
+	sessionManager.Cookie.Secure = true
 
 	// Initialize a new instance of application struct
 	app := &application{
@@ -86,7 +87,7 @@ func main() {
 	logger.Info("starting server", slog.String("addr", *addr))
 
 	// Use srv struct to ListenAndServe
-	err = srv.ListenAndServe()
+	err = srv.ListenAndServeTLS("./tls/cert.pem", "./tls/key.pem")
 	logger.Error(err.Error())
 	os.Exit(1)
 }
